@@ -1,0 +1,64 @@
+version: "3"
+
+networks:
+  traefik-net:
+    driver: overlay
+
+volumes:
+  nginx-html:
+
+services:
+    hugo:
+      image: hugo
+      networks:
+        - traefik-net
+      volumes:
+        - nginx-html:/usr/share/nginx/html/
+      environment:
+        - HUGO_REPO_URL=https://github.com/d2one/d2one.github.io.git
+        - NGINX_HTML_VOLUME=/usr/share/nginx/html/
+
+      deploy:
+        mode: replicated
+        replicas: 1
+        labels:
+          - "traefik.port=9000"
+          - "traefik.docker.network=traefik-net"
+          - "traefik.backend=hugo"
+          - "traefik.frontend.rule=PathPrefix:/hooks/"
+          - "traefik.backend.loadbalancer.method=drr"
+          - "traefik.backend.loadbalancer.swarm=true"
+    nginx:
+      image: nginx
+      networks:
+        - traefik-net
+      volumes:
+        - nginx-html:/usr/share/nginx/html/
+
+      deploy:
+        mode: replicated
+        replicas: 3
+        labels:
+          - "traefik.port=80"
+          - "traefik.docker.network=traefik-net"
+          - "traefik.backend=nginx"
+          - "traefik.frontend.rule=Host:d2one.ru"
+          - "traefik.backend.loadbalancer.method=drr"
+          - "traefik.backend.loadbalancer.swarm=true"
+
+    traefik:
+      image: traefik:camembert
+      command: -c /etc/traefik/traefik.toml --web --docker --docker.swarmmode --docker.watch --docker.domain=d2one.ru --logLevel=DEBUG
+      networks:
+        - traefik-net
+      ports:
+        - "80:80"
+        - "8080:8080"
+        - "443:443"
+      volumes:
+        - /var/run/docker.sock:/var/run/docker.sock
+        - $PWD/volumes/traefik/:/etc/traefik/
+      deploy:
+        placement:
+          constraints: [node.role == manager]
+
