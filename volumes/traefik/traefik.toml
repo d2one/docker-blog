@@ -12,23 +12,23 @@ address = ":8080"
 [entryPoints.http]
 address = ":80"
 
-#[entryPoints.http.redirect]
-#entryPoint = "https"
+[entryPoints.http.redirect]
+entryPoint = "https"
 
 # https is the default
-#[entryPoints.https]
-#address = ":443"
+[entryPoints.https]
+address = ":443"
 
-#[entryPoints.https.tls]
+[entryPoints.https.tls]
 
 # Enable ACME (Let's Encrypt): automatic SSL
-#[acme]
-#caServer = "https://acme-staging.api.letsencrypt.org/directory"
-#email = "kuznetsov.daniil.d2@gmail.com"
-#storage = "/etc/traefik/acme/acme.json" # or "traefik/acme/account" if using KV store
-#entryPoint = "https"
-#onDemand = false
-#OnHostRule = true
+[acme]
+# caServer = "https://acme-staging.api.letsencrypt.org/directory"
+email = "kuznetsov.daniil.d2@gmail.com"
+storage = "/etc/traefik/acme/acme.json" # or "traefik/acme/account" if using KV store
+entryPoint = "https"
+onDemand = false
+OnHostRule = true
 
 
 [docker]

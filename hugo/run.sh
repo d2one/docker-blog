@@ -36,7 +36,9 @@ function requiredVariable() {
 
 function checkEnv() {
     requiredVariable HUGO_REPO_URL
+    requiredVariable HUGO_THEME
     requiredVariable NGINX_HTML_VOLUME
+
     optionalVariable HUGO_REPO_BRANCH master
 
     if [[ ! -d "${NGINX_HTML_VOLUME}" ]]
@@ -48,7 +50,7 @@ function checkEnv() {
 
 
 function cloneRepo() {
-    local basename=$(basename $HUGO_REPO_BRANCH)
+    local basename=$(basename $HUGO_REPO_URL)
     local filename=${basename%.*}
     REPO_DIR="${REPO_DIR}${filename}"
 
@@ -58,16 +60,19 @@ function cloneRepo() {
 
 
 function updateRepo() {
+    local basename=$(basename $HUGO_REPO_URL)
+    local filename=${basename%.*}
+    REPO_DIR="${REPO_DIR}${filename}"
     cd $REPO_DIR
     logInfo "update ${REPO_DIR}"
-    git fetch && git pull
+    git fetch && git pull && git pull --recurse-submodules
 }
 
 
 function runHugo() {
     logInfo "Try to start hugo"
     logInfo "/usr/local/bin/hugo -s ${REPO_DIR} ${HUGO_IGNORE_CACHE} -d ${NGINX_HTML_VOLUME}"
-    time /usr/local/bin/hugo -s ${REPO_DIR} ${HUGO_IGNORE_CACHE} -d ${NGINX_HTML_VOLUME}
+    time /usr/local/bin/hugo -s ${REPO_DIR} --theme=${HUGO_THEME} -d ${NGINX_HTML_VOLUME} ${HUGO_IGNORE_CACHE}
 }
 
 

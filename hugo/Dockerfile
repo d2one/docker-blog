@@ -1,24 +1,22 @@
-FROM        alpine
+FROM golang:1.8-alpine
 
-ENV         GOPATH /go
-ENV         WEBHOOKPATH ${GOPATH}/src/github.com/adnanh/webhook
-ENV         HUGOPATH ${GOPATH}/src/github.com/spf13/hugo
+RUN apk update && apk upgrade && \
+    apk add --no-cache git && rm -rf /var/cache/apk/*
 
-RUN         apk add --no-cache --update -t build-deps go libc-dev gcc libgcc && mkdir -p ${WEBHOOKPATH} && mkdir -p ${HUGOPATH}
-RUN         apk add --no-cache git bash
+RUN go get -v github.com/adnanh/webhook
+RUN go get -v github.com/spf13/hugo
 
-RUN         git clone https://github.com/adnanh/webhook.git ${WEBHOOKPATH} && \
-            cd ${WEBHOOKPATH} && go get && go build -o /usr/local/bin/webhook
+FROM alpine
+RUN apk update && apk upgrade && \
+    apk add --no-cache bash git && rm -rf /var/cache/apk/*
 
-RUN         git clone https://github.com/spf13/hugo.git ${HUGOPATH} && \
-            cd ${HUGOPATH} && go get && go build -o /usr/local/bin/hugo
+COPY --from=0 /go/bin/webhook /usr/local/bin/webhook
+COPY --from=0 /go/bin/hugo /usr/local/bin/hugo
 
-RUN         rm -rf ${GOPATH} && rm -rf /var/cache/apk/* && apk del build-deps
+COPY hooks.json /etc/webhook/hooks.json
+COPY run.sh /run.sh
 
-COPY 		hooks.json /etc/webhook/hooks.json
-COPY 		run.sh /run.sh
-
-EXPOSE      9000
-ENTRYPOINT  ["/bin/bash", "/run.sh"]
-CMD         ["run"]
+EXPOSE 9000
+ENTRYPOINT ["/bin/bash", "/run.sh"]
+CMD ["run"]
 
