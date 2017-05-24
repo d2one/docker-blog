@@ -1,6 +1,9 @@
 [
   {
     "id": "redeploy",
-    "execute-command": "/run.sh webhook"
+    "execute-command": "/run.sh",
+    "pass-arguments-to-command": [
+        { "source": "string", "name": "webhook" }
+    ]
   }
 ]

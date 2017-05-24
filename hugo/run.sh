@@ -65,7 +65,8 @@ function updateRepo() {
     REPO_DIR="${REPO_DIR}${filename}"
     cd $REPO_DIR
     logInfo "update ${REPO_DIR}"
-    git fetch && git pull && git pull --recurse-submodules
+
+    git fetch && git reset --hard origin/${HUGO_REPO_BRANCH:-master}
 }
 
 
