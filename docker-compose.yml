@@ -13,7 +13,7 @@ services:
         - $PWD/volumes/nginx/html/:/usr/share/nginx/html/
       environment:
         - HUGO_REPO_URL=https://github.com/d2one/d2one.github.io.git
-        - HUGO_THEME=cocoa-hugo-theme
+        - HUGO_THEME=hugo-cactus-theme
         - NGINX_HTML_VOLUME=/usr/share/nginx/html/
 
       deploy:
