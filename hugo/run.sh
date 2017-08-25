@@ -36,9 +36,7 @@ function requiredVariable() {
 
 function checkEnv() {
     requiredVariable HUGO_REPO_URL
-    requiredVariable HUGO_THEME
     requiredVariable NGINX_HTML_VOLUME
-
     optionalVariable HUGO_REPO_BRANCH master
 
     if [[ ! -d "${NGINX_HTML_VOLUME}" ]]
@@ -73,7 +71,8 @@ function updateRepo() {
 function runHugo() {
     logInfo "Try to start hugo"
     logInfo "/usr/local/bin/hugo -s ${REPO_DIR} ${HUGO_IGNORE_CACHE} -d ${NGINX_HTML_VOLUME}"
-    time /usr/local/bin/hugo -s ${REPO_DIR} --theme=${HUGO_THEME} -d ${NGINX_HTML_VOLUME} ${HUGO_IGNORE_CACHE}
+    local hugo_theme=$(grep -Eo "theme *= *\"(.*)\"" config.toml | grep -o "\".*\"" | tr "\"" " ")
+    time /usr/local/bin/hugo -s ${REPO_DIR} --theme=${hugo_theme} -d ${NGINX_HTML_VOLUME} ${HUGO_IGNORE_CACHE}
 }
 
 
