@@ -71,7 +71,8 @@ function updateRepo() {
 function runHugo() {
     logInfo "Try to start hugo"
     logInfo "/usr/local/bin/hugo -s ${REPO_DIR} ${HUGO_IGNORE_CACHE} -d ${NGINX_HTML_VOLUME}"
-    local hugo_theme=$(grep -Eo "theme *= *\"(.*)\"" config.toml | grep -o "\".*\"" | tr "\"" " ")
+
+    local hugo_theme=$(grep -Eo "theme *= *\"(.*)\"" ${REPO_DIR}/config.toml | grep -o '".*"' | sed -e 's/\"//g')
     time /usr/local/bin/hugo -s ${REPO_DIR} --theme=${hugo_theme} -d ${NGINX_HTML_VOLUME} ${HUGO_IGNORE_CACHE}
 }
 
