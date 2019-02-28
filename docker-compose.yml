@@ -20,7 +20,7 @@ services:
         replicas: 1
         labels:
           - "traefik.port=9000"
-          - "traefik.docker.network=traefik-net"
+          - "traefik.docker.network=d2one_traefik-net"
           - "traefik.backend=hugo"
           - "traefik.frontend.rule=PathPrefix:/hooks/"
           - "traefik.backend.loadbalancer.method=drr"
@@ -37,15 +37,15 @@ services:
         replicas: 3
         labels:
           - "traefik.port=80"
-          - "traefik.docker.network=traefik-net"
+          - "traefik.docker.network=d2one_traefik-net"
           - "traefik.backend=nginx"
           - "traefik.frontend.rule=Host:d2one.ru"
           - "traefik.backend.loadbalancer.method=drr"
           - "traefik.backend.loadbalancer.swarm=true"
 
     traefik:
-      image: traefik:camembert
-      command: -c /etc/traefik/traefik.toml --web --docker --docker.swarmmode --docker.watch --docker.domain=d2one.ru --logLevel=DEBUG
+      image: traefik:1.7.9
+      command: -c /etc/traefik/traefik.toml --web --docker --docker.swarmmode --docker.watch --docker.domain=d2one.ru --logLevel=ERROR
       networks:
         - traefik-net
       ports:
@@ -55,6 +55,13 @@ services:
       volumes:
         - /var/run/docker.sock:/var/run/docker.sock
         - $PWD/volumes/traefik/:/etc/traefik/
+      environment:
+         - DO_AUTH_TOKEN= #your-digitalocean-generated-api-token        
+      labels:
+         - "traefik.frontend.headers.forceSTSHeader=true"
+         - "traefik.frontend.headers.STSSeconds=1"
+         - "traefik.frontend.headers.STSIncludeSubdomains=true"
+         - "traefik.frontend.headers.STSPreload=true"        
       deploy:
         placement:
           constraints: [node.role == manager]

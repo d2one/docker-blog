@@ -1,3 +1,6 @@
+debug = false
+loglevel = "ERROR" 
+
 # defaultEntryPoints must be at the top because it should not be in any table below
 defaultEntryPoints = ["http", "https"]
 
@@ -17,22 +20,33 @@ entryPoint = "https"
 
 # https is the default
 [entryPoints.https]
-address = ":443"
+    address = ":443"
+    [entryPoints.https.tls]
 
-[entryPoints.https.tls]
+[entryPoints.traefik]
+    address = ":8080"
+
+[api]
+  entryPoint = "traefik"
+
+[retry]    
 
 # Enable ACME (Let's Encrypt): automatic SSL
 [acme]
-# caServer = "https://acme-staging.api.letsencrypt.org/directory"
-email = "kuznetsov.daniil.d2@gmail.com"
-storage = "/etc/traefik/acme/acme.json" # or "traefik/acme/account" if using KV store
-entryPoint = "https"
-onDemand = false
-OnHostRule = true
-
+    email = "kuznetsov.daniil.d2@gmail.com"
+    storage = "/etc/traefik/acme/acme.json"   
+    onHostRule = true
+    entryPoint = "https"
+    
+    [acme.dnsChallenge]
+        provider = "digitalocean"
+        delayBeforeCheck = 0
+    [[acme.domains]]
+        main = "*.d2one.ru"
+        sans = ["d2one.ru"]
 
 [docker]
-endpoint = "unix:///var/run/docker.sock"
-domain = "d2one.ru"
-watch = true
-exposedbydefault = false
+    endpoint = "unix:///var/run/docker.sock"
+    domain = "d2one.ru"
+    watch = true
+    exposedbydefault = false
