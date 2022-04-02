@@ -39,7 +39,7 @@ entryPoint = "https"
     entryPoint = "https"
     
     [acme.dnsChallenge]
-        provider = "digitalocean"
+        provider = "regru"
         delayBeforeCheck = 0
     [[acme.domains]]
         main = "*.d2one.ru"

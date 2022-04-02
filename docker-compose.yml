@@ -34,7 +34,7 @@ services:
 
       deploy:
         mode: replicated
-        replicas: 3
+        replicas: 1
         labels:
           - "traefik.port=80"
           - "traefik.docker.network=d2one_traefik-net"
@@ -44,7 +44,7 @@ services:
           - "traefik.backend.loadbalancer.swarm=true"
 
     traefik:
-      image: traefik:1.7.9
+      image: traefik:2.7
       command: -c /etc/traefik/traefik.toml --web --docker --docker.swarmmode --docker.watch --docker.domain=d2one.ru --logLevel=ERROR
       networks:
         - traefik-net
@@ -56,12 +56,15 @@ services:
         - /var/run/docker.sock:/var/run/docker.sock
         - $PWD/volumes/traefik/:/etc/traefik/
       environment:
-         - DO_AUTH_TOKEN= #your-digitalocean-generated-api-token        
+        - 'REGRU_USERNAME=xxxxx'
+        - 'REGRU_PASSWORD=xxxxx'
+        - 'REGRU_PROPAGATION_TIMEOUT=7200'
+        - 'REGRU_POLLING_INTERVAL=600'
       labels:
-         - "traefik.frontend.headers.forceSTSHeader=true"
-         - "traefik.frontend.headers.STSSeconds=1"
-         - "traefik.frontend.headers.STSIncludeSubdomains=true"
-         - "traefik.frontend.headers.STSPreload=true"        
+        - "traefik.frontend.headers.forceSTSHeader=true"
+        - "traefik.frontend.headers.STSSeconds=1"
+        - "traefik.frontend.headers.STSIncludeSubdomains=true"
+        - "traefik.frontend.headers.STSPreload=true"
       deploy:
         placement:
           constraints: [node.role == manager]
