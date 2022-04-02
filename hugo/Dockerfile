@@ -1,4 +1,4 @@
-FROM golang:1.11.5-alpine3.9 AS builder
+FROM golang:1.18.0-alpine3.15 AS builder
 
 RUN apk add --no-cache git
 # Install pygments (for syntax highlighting) and bash
@@ -9,9 +9,9 @@ RUN mkdir /usr/local/hugo
 ADD https://github.com/spf13/hugo/releases/download/v0.54.0/hugo_0.54.0_linux-64bit.tar.gz /usr/local/hugo/
 RUN tar xzf /usr/local/hugo/hugo_0.54.0_linux-64bit.tar.gz -C /usr/local/hugo/
 
-RUN go get -v github.com/adnanh/webhook
+RUN go install github.com/adnanh/webhook@latest
 
-FROM alpine:3.9
+FROM alpine:3.15
 RUN apk add --no-cache bash git && rm -rf /var/cache/apk/*
 COPY --from=builder /usr/local/hugo/hugo /usr/local/bin/
 COPY --from=builder /go/bin/ /usr/local/bin/
