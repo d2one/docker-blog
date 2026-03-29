@@ -42,13 +42,14 @@ services:
     image: nginx:1.28.3
     restart: unless-stopped
     depends_on:
-      - hugo
+      hugo:
+        condition: service_healthy
     volumes:
       - $PWD/volumes/nginx/html/:/usr/share/nginx/html/
       - $PWD/volumes/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.blog.rule=Host('d2one.ru')"
+      - "traefik.http.routers.blog.rule=Host(`d2one.ru`)"
       - "traefik.http.routers.blog.tls.certresolver=leresolver"
       - "traefik.http.routers.blog.entrypoints=websecure"
     healthcheck:
@@ -69,12 +70,13 @@ services:
       - NGINX_HTML_VOLUME=/usr/share/nginx/html/
       - WEBHOOK_SECRET=${WEBHOOK_SECRET}
     labels:
-      - "traefik.http.routers.hugo.rule=Host('d2one.ru') && PathPrefix('/hooks')"
+      - "traefik.http.routers.hugo.rule=Host(`d2one.ru`) && PathPrefix(`/hooks`)"
       - "traefik.http.routers.hugo.tls.certresolver=leresolver"
       - "traefik.http.routers.hugo.entrypoints=websecure"
       - "traefik.http.services.hugo.loadbalancer.server.port=9000"
     healthcheck:
       test: ["CMD-SHELL", "wget -q --spider http://localhost:9000/ || exit 1"]
-      interval: 60s
+      interval: 10s
       timeout: 5s
       retries: 3
+      start_period: 60s

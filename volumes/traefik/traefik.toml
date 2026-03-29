@@ -1,3 +1,0 @@
-# Traefik v2 static configuration
-# All configuration is provided via CLI flags in docker-compose.yml.
-# This file is intentionally minimal to avoid conflicts with CLI flags.

@@ -89,7 +89,7 @@ function runHugo() {
 
     local hugo_theme=$(grep -Eo "theme *= *\"(.*)\"" "${config_file}" | grep -o '".*"' | sed -e 's/\"//g')
 
-    local hugo_cmd="/usr/local/bin/hugo -s ${REPO_DIR} -d ${NGINX_HTML_VOLUME} ${HUGO_IGNORE_CACHE}"
+    local hugo_cmd="hugo -s ${REPO_DIR} -d ${NGINX_HTML_VOLUME} ${HUGO_IGNORE_CACHE}"
     if [ -n "${hugo_theme}" ]; then
         hugo_cmd="${hugo_cmd} --theme=${hugo_theme}"
     fi
