@@ -1,21 +1,18 @@
-FROM golang:1.24.4-alpine3.22 AS builder
+FROM golang:1.26.1-alpine3.23 AS builder
 
 RUN apk add --no-cache git
-# Install pygments (for syntax highlighting) and bash
-RUN apk update && apk add py-pygments && apk add bash && rm -rf /var/cache/apk/*
+RUN go install github.com/adnanh/webhook@2.8.3
 
-# Download and Install hugo
-# RUN mkdir /usr/local/hugo
-# ADD https://github.com/spf13/hugo/releases/download/v0.54.0/hugo_0.54.0_linux-64bit.tar.gz /usr/local/hugo/
-# RUN tar xzf /usr/local/hugo/hugo_0.54.0_linux-64bit.tar.gz -C /usr/local/hugo/
+FROM alpine:3.23
 
-RUN go install github.com/adnanh/webhook@latest
+ARG HUGO_VERSION=0.159.1
+RUN apk add --no-cache bash git wget libc6-compat libstdc++ && \
+    wget -O /tmp/hugo.tar.gz "https://github.com/gohugoio/hugo/releases/download/v${HUGO_VERSION}/hugo_extended_${HUGO_VERSION}_linux-amd64.tar.gz" && \
+    tar -xzf /tmp/hugo.tar.gz -C /usr/local/bin/ hugo && \
+    rm /tmp/hugo.tar.gz && \
+    chmod +x /usr/local/bin/hugo
 
-FROM alpine:3.22
-RUN apk add --no-cache bash git hugo && rm -rf /var/cache/apk/*
-# COPY --from=builder /usr/local/hugo/hugo /usr/local/bin/
 COPY --from=builder /go/bin/ /usr/local/bin/
-
 COPY hooks.json /etc/webhook/hooks.json
 COPY run.sh /run.sh
 

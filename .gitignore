@@ -1,2 +1,6 @@
-
 .idea/
+.env
+*.log
+volumes/traefik/acme/acme.json
+volumes/nginx/html/*
+!volumes/nginx/html/.gitkeep

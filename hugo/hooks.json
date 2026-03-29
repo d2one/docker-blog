@@ -4,6 +4,16 @@
     "execute-command": "/run.sh",
     "pass-arguments-to-command": [
         { "source": "string", "name": "webhook" }
-    ]
+    ],
+    "trigger-rule": {
+      "match": {
+        "type": "value",
+        "value": "{{ getenv \"WEBHOOK_SECRET\" }}",
+        "parameter": {
+          "source": "header",
+          "name": "X-Webhook-Secret"
+        }
+      }
+    }
   }
 ]

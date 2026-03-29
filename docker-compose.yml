@@ -1,71 +1,80 @@
-version: "3"
-
-networks:
-  traefik-net:
-    driver: overlay
-
 services:
-    hugo:
-      image: hugo
-      networks:
-        - traefik-net
-      volumes:
-        - $PWD/volumes/nginx/html/:/usr/share/nginx/html/
-      environment:
-        - HUGO_REPO_URL=https://github.com/d2one/d2one.github.io.git
-        - NGINX_HTML_VOLUME=/usr/share/nginx/html/
+  traefik:
+    image: "traefik:v3.6.12"
+    restart: unless-stopped
+    command:
+      - --entrypoints.websecure.address=:443
+      - --entrypoints.web.address=:80
+      - --log.level=DEBUG
+      - --entrypoints.web.http.redirections.entryPoint.to=websecure
+      - --entrypoints.web.http.redirections.entryPoint.scheme=https
+      - --providers.docker=true
+      - --ping=true
+      - --certificatesresolvers.leresolver.acme.email=kuznetsov.daniil.d2@gmail.com
+      - --certificatesresolvers.leresolver.acme.storage=/etc/traefik/acme.json
+      - --certificatesresolvers.leresolver.acme.dnschallenge=true
+      - --certificatesresolvers.leresolver.acme.dnschallenge.provider=exec
+    labels:
+      - 'traefik.http.routers.wildcard-certs.tls.certresolver=leresolver'
+      - 'traefik.http.routers.wildcard-certs.tls.domains[0].main=d2one.ru'
+      - 'traefik.http.routers.wildcard-certs.tls.domains[0].sans=*.d2one.ru'
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - $PWD/volumes/traefik/:/etc/traefik/
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+    environment:
+      - 'REGRU_USERNAME=${REGRU_USERNAME}'
+      - 'REGRU_PASSWORD=${REGRU_PASSWORD}'
+      - 'REGRU_PROPAGATION_TIMEOUT=300'
+      - 'REGRU_POLLING_INTERVAL=60'
+      - 'EXEC_PATH=/etc/traefik/update-dns.sh'
+      - 'EXEC_POLLING_INTERVAL=60'
+      - 'EXEC_PROPAGATION_TIMEOUT=660'
+    healthcheck:
+      test: ["CMD", "traefik", "healthcheck"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
 
-      deploy:
-        mode: replicated
-        replicas: 1
-        labels:
-          - "traefik.port=9000"
-          - "traefik.docker.network=d2one_traefik-net"
-          - "traefik.backend=hugo"
-          - "traefik.frontend.rule=PathPrefix:/hooks/"
-          - "traefik.backend.loadbalancer.method=drr"
-          - "traefik.backend.loadbalancer.swarm=true"
-    nginx:
-      image: nginx
-      networks:
-        - traefik-net
-      volumes:
-        - $PWD/volumes/nginx/html/:/usr/share/nginx/html/
+  nginx:
+    image: nginx:1.28.3
+    restart: unless-stopped
+    depends_on:
+      - hugo
+    volumes:
+      - $PWD/volumes/nginx/html/:/usr/share/nginx/html/
+      - $PWD/volumes/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.blog.rule=Host('d2one.ru')"
+      - "traefik.http.routers.blog.tls.certresolver=leresolver"
+      - "traefik.http.routers.blog.entrypoints=websecure"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost/ || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
 
-      deploy:
-        mode: replicated
-        replicas: 1
-        labels:
-          - "traefik.port=80"
-          - "traefik.docker.network=d2one_traefik-net"
-          - "traefik.backend=nginx"
-          - "traefik.frontend.rule=Host:d2one.ru"
-          - "traefik.backend.loadbalancer.method=drr"
-          - "traefik.backend.loadbalancer.swarm=true"
-
-    traefik:
-      image: traefik:2.7
-      command: -c /etc/traefik/traefik.toml --web --docker --docker.swarmmode --docker.watch --docker.domain=d2one.ru --logLevel=ERROR
-      networks:
-        - traefik-net
-      ports:
-        - "80:80"
-        - "8080:8080"
-        - "443:443"
-      volumes:
-        - /var/run/docker.sock:/var/run/docker.sock
-        - $PWD/volumes/traefik/:/etc/traefik/
-      environment:
-        - 'REGRU_USERNAME=xxxxx'
-        - 'REGRU_PASSWORD=xxxxx'
-        - 'REGRU_PROPAGATION_TIMEOUT=7200'
-        - 'REGRU_POLLING_INTERVAL=600'
-      labels:
-        - "traefik.frontend.headers.forceSTSHeader=true"
-        - "traefik.frontend.headers.STSSeconds=1"
-        - "traefik.frontend.headers.STSIncludeSubdomains=true"
-        - "traefik.frontend.headers.STSPreload=true"
-      deploy:
-        placement:
-          constraints: [node.role == manager]
-
+  hugo:
+    image: hugo
+    restart: unless-stopped
+    depends_on:
+      - traefik
+    volumes:
+      - $PWD/volumes/nginx/html/:/usr/share/nginx/html/
+    environment:
+      - HUGO_REPO_URL=https://github.com/d2one/d2one.github.io.git
+      - NGINX_HTML_VOLUME=/usr/share/nginx/html/
+      - WEBHOOK_SECRET=${WEBHOOK_SECRET}
+    labels:
+      - "traefik.http.routers.hugo.rule=Host('d2one.ru') && PathPrefix('/hooks')"
+      - "traefik.http.routers.hugo.tls.certresolver=leresolver"
+      - "traefik.http.routers.hugo.entrypoints=websecure"
+      - "traefik.http.services.hugo.loadbalancer.server.port=9000"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:9000/ || exit 1"]
+      interval: 60s
+      timeout: 5s
+      retries: 3

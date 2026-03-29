@@ -70,10 +70,39 @@ function updateRepo() {
 
 function runHugo() {
     logInfo "Try to start hugo"
-    logInfo "/usr/local/bin/hugo -s ${REPO_DIR} ${HUGO_IGNORE_CACHE} -d ${NGINX_HTML_VOLUME}"
 
-    local hugo_theme=$(grep -Eo "theme *= *\"(.*)\"" ${REPO_DIR}/config.toml | grep -o '".*"' | sed -e 's/\"//g')
-    time /usr/local/bin/hugo -s ${REPO_DIR} --theme=${hugo_theme} -d ${NGINX_HTML_VOLUME} ${HUGO_IGNORE_CACHE}
+    local config_file=""
+    if [ -f "${REPO_DIR}/hugo.toml" ]; then
+        config_file="${REPO_DIR}/hugo.toml"
+    elif [ -f "${REPO_DIR}/hugo.yaml" ]; then
+        config_file="${REPO_DIR}/hugo.yaml"
+    elif [ -f "${REPO_DIR}/config.toml" ]; then
+        config_file="${REPO_DIR}/config.toml"
+    elif [ -f "${REPO_DIR}/config.yaml" ]; then
+        config_file="${REPO_DIR}/config.yaml"
+    else
+        logError "No Hugo config file found (tried hugo.toml, hugo.yaml, config.toml, config.yaml)"
+        return 1
+    fi
+
+    logInfo "Using config: ${config_file}"
+
+    local hugo_theme=$(grep -Eo "theme *= *\"(.*)\"" "${config_file}" | grep -o '".*"' | sed -e 's/\"//g')
+
+    local hugo_cmd="/usr/local/bin/hugo -s ${REPO_DIR} -d ${NGINX_HTML_VOLUME} ${HUGO_IGNORE_CACHE}"
+    if [ -n "${hugo_theme}" ]; then
+        hugo_cmd="${hugo_cmd} --theme=${hugo_theme}"
+    fi
+
+    logInfo "${hugo_cmd}"
+    time ${hugo_cmd}
+
+    if [ $? -ne 0 ]; then
+        logError "Hugo build failed"
+        return 1
+    fi
+
+    logInfo "Hugo build completed successfully"
 }
 
 
@@ -88,11 +117,11 @@ checkEnv
 case "$1" in
 run)
     cloneRepo
-    runHugo
+    runHugo || { logError "Hugo build failed, not starting webhook"; exit 1; }
     runWebhook
     ;;
 webhook)
     updateRepo
-    runHugo
+    runHugo || { logError "Hugo rebuild failed"; exit 1; }
     ;;
 esac
