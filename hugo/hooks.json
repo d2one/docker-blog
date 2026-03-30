@@ -7,11 +7,11 @@
     ],
     "trigger-rule": {
       "match": {
-        "type": "value",
-        "value": "{{ getenv \"WEBHOOK_SECRET\" }}",
+        "type": "payload-hmac-sha256",
+        "secret": "{{ getenv \"WEBHOOK_SECRET\" }}",
         "parameter": {
           "source": "header",
-          "name": "X-Webhook-Secret"
+          "name": "X-Hub-Signature-256"
         }
       }
     }

@@ -19,7 +19,7 @@ Internet → Traefik (:80/:443) → Nginx (static files)
                                → Hugo webhook (/hooks/*)
 
 Hugo container: clones blog repo → builds with hugo → outputs to shared volume → starts webhook listener
-Webhook hit (X-Webhook-Secret header) → pulls latest → rebuilds hugo → nginx serves updated files
+Webhook hit (GitHub X-Hub-Signature-256) → pulls latest → rebuilds hugo → nginx serves updated files
 ```
 
 Traefik handles TLS cert provisioning using an exec-based DNS challenge solver (`update-dns.sh`) that calls the reg.ru API.
@@ -41,4 +41,4 @@ make rebuild         # Rebuild hugo image and recreate hugo container
 
 Copy `.env.example` to `.env` and fill in:
 - `REGRU_USERNAME` / `REGRU_PASSWORD` — reg.ru API credentials for DNS challenge
-- `WEBHOOK_SECRET` — shared secret for the rebuild webhook (sent via `X-Webhook-Secret` header)
+- `WEBHOOK_SECRET` — shared secret for the rebuild webhook (verified via GitHub HMAC signature)
