@@ -26,14 +26,14 @@ Traefik handles TLS cert provisioning using an exec-based DNS challenge solver (
 
 ## Commands
 
-All commands run from the `hugo/` directory using the Makefile:
+All commands run from the project root using the Makefile:
 
 ```bash
-make docker-build    # Build the hugo Docker image
-make up              # docker compose up -d
-make down            # docker compose down
-make logs            # docker compose logs -f
-make restart         # docker compose restart
+make build-hugo      # Build the hugo Docker image
+make up              # docker-compose up -d
+make down            # docker-compose down
+make logs            # docker-compose logs -f
+make restart         # docker-compose restart
 make rebuild         # Rebuild hugo image and recreate hugo container
 ```
 
@@ -42,3 +42,5 @@ make rebuild         # Rebuild hugo image and recreate hugo container
 Copy `.env.example` to `.env` and fill in:
 - `REGRU_USERNAME` / `REGRU_PASSWORD` — reg.ru API credentials for DNS challenge
 - `WEBHOOK_SECRET` — shared secret for the rebuild webhook (verified via GitHub HMAC signature)
+- `HUGO_REPO_URL` — Git URL of the Hugo blog repository
+- `DOMAIN` — domain name for the blog (used in Traefik routing and TLS)

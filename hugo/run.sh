@@ -122,6 +122,8 @@ run)
     runWebhook
     ;;
 webhook)
+    exec 200>/tmp/rebuild.lock
+    flock -n 200 || { logWarning "Rebuild already in progress, skipping"; exit 0; }
     updateRepo
     runHugo || { logError "Hugo rebuild failed"; exit 1; }
     ;;
