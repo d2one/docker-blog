@@ -108,8 +108,9 @@ function runHugo() {
 
 function runWebhook() {
     logInfo "Try to start webhook"
-    logInfo "/usr/local/bin/webhook -hooks /etc/webhook/hooks.json -verbose"
-    /usr/local/bin/webhook -hooks /etc/webhook/hooks.json -verbose
+    envsubst < /etc/webhook/hooks.json > /tmp/hooks.json
+    logInfo "/usr/local/bin/webhook -hooks /tmp/hooks.json -verbose"
+    /usr/local/bin/webhook -hooks /tmp/hooks.json -verbose
 }
 
 checkEnv

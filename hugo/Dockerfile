@@ -6,7 +6,7 @@ RUN go install github.com/adnanh/webhook@2.8.3
 FROM alpine:3.23
 
 RUN apk add --no-cache --repository=https://dl-cdn.alpinelinux.org/alpine/edge/community \
-    bash git hugo
+    bash git hugo gettext
 
 COPY --from=builder /go/bin/ /usr/local/bin/
 COPY hooks.json /etc/webhook/hooks.json
