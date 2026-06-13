@@ -1,7 +1,7 @@
-COMPOSE = docker-compose
+COMPOSE = docker compose
 
 build-hugo:
-	docker build-hugo --force-rm=true --tag=hugo hugo/
+	docker build --force-rm=true --tag=hugo hugo/
 
 up:
 	$(COMPOSE) up -d

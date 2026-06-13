@@ -39,7 +39,7 @@ services:
       - 'EXEC_POLLING_INTERVAL=60'
       - 'EXEC_PROPAGATION_TIMEOUT=660'
     healthcheck:
-      test: ["CMD", "traefik", "healthcheck"]
+      test: ["CMD", "traefik", "healthcheck", "--ping"]
       interval: 30s
       timeout: 5s
       retries: 3
